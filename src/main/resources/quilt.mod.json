@@ -10,7 +10,8 @@
 			"description": "A short description of your mod.",
 			"contributors": {
 				"SylvKT": "Owner",
-				"ENDERZOMBI102": "Contributor"
+				"ENDERZOMBI102": "Contributor",
+				"cocona20xx": "Contributor"
 			},
 			"contact": {
 				"homepage": "https://cursedmc.net/",
@@ -23,7 +24,7 @@
 		"depends": [
 			{
 				"id": "quilt_loader",
-				"versions": ">=0.17.0-"
+				"versions": ">=0.18.7-"
 			},
 			"minecraft"
 		],
