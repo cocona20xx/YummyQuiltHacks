@@ -1,8 +1,10 @@
 package net.cursedmc.yqh;
 
+import com.enderzombi102.enderlib.BetterRuntimeUtil;
 import net.auoeke.reflect.ClassDefiner;
 import net.auoeke.reflect.Classes;
 import net.bytebuddy.agent.ByteBuddyAgent;
+import net.cursedmc.yqh.api.entrypoints.PreMixin;
 import net.cursedmc.yqh.api.instrumentation.Music;
 import net.cursedmc.yqh.api.mixin.Mixout;
 import net.devtech.grossfabrichacks.unsafe.UnsafeUtil;
@@ -13,6 +15,8 @@ import org.apache.logging.log4j.Logger;
 import org.quiltmc.loader.api.LanguageAdapter;
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.loader.api.QuiltLoader;
+import org.quiltmc.loader.api.entrypoint.EntrypointContainer;
+import org.quiltmc.loader.api.plugin.ModMetadataExt;
 import org.quiltmc.loader.impl.ModContainerImpl;
 import org.quiltmc.loader.impl.launch.knot.Knot;
 import org.quiltmc.loader.impl.metadata.qmj.AdapterLoadableClassEntry;
@@ -22,6 +26,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.jar.JarFile;
 
@@ -99,15 +104,15 @@ public class YummyQuiltHacks implements LanguageAdapter {
 
 		LOGGER.fatal("Quilt has been successfully pwned >:3");
 
-		//noinspection unchecked
-		for (ModContainerImpl mod : (Collection<ModContainerImpl>) (Collection<?>) QuiltLoader.getAllMods()) {
-			if (mod.getInternalMeta().getEntrypoints().containsKey("yqh:pre_mixin")) {
-				for (AdapterLoadableClassEntry entry : mod.getInternalMeta().getEntrypoints().get("yqh:pre_mixin")) {
+		for(ModContainer mod : QuiltLoader.getAllMods()){
+			ModMetadataExt ext = (ModMetadataExt) mod.metadata(); //no clue if this works!!!
+			if(ext.getEntrypoints().containsKey("yqh:pre_mixin")) {
+				for(AdapterLoadableClassEntry entry : ext.getEntrypoints().get("yqh:pre_mixin")) {
 					Class<?> preMixinClass = ClassDefiner.make()
-							.classFile(entry.getValue())
-							.name(entry.getValue())
-							.loader(appLoader)
-							.define();
+						.classFile(entry.getValue())
+						.name(entry.getValue())
+						.loader(appLoader)
+						.define();
 					Object preMixin = doSafely(() -> preMixinClass.getConstructor().newInstance());
 					doSafely(() -> preMixin.getClass().getMethod("onPreMixin").invoke(preMixin));
 				}
