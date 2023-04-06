@@ -21,9 +21,9 @@ import java.util.function.BiConsumer;
 public class Music {
 	private static final Logger LOGGER = LogManager.getLogger("YummyQuiltHacks/Music");
 	public static final Instrumentation INST;
-	
+
 	private Music() {}
-	
+
 	public static void retransformClass(Class<?> klass, BiConsumer<String, ClassNode> consumer) {
 		ClassFileTransformer transformer = createTransformer(consumer);
 		INST.addTransformer(transformer, true);
@@ -35,7 +35,7 @@ public class Music {
 		}
 		INST.removeTransformer(transformer);
 	}
-	
+
 	public static void retransformClass(String name, BiConsumer<String, ClassNode> consumer) {
 		try {
 			retransformClass(Class.forName(name, true, UnsafeKnotClassLoader.knotLoader), consumer);
@@ -43,7 +43,7 @@ public class Music {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private static ClassFileTransformer createTransformer(BiConsumer<String, ClassNode> consumer) {
 		return new ClassFileTransformer() {
 			@Override
@@ -58,7 +58,7 @@ public class Music {
 			}
 		};
 	}
-	
+
 	static {
 		LOGGER.info("Music Loaded");
 		LOGGER.info("what have we done");
@@ -66,8 +66,11 @@ public class Music {
 		LOGGER.info("achievement unlcoekd");
 		LOGGER.info("advancement*");
 		ClassLoader appLoader = Knot.class.getClassLoader();
-		
-		Class<?> musicAgent = Class.forName("net.cursedmc.yqh.impl.instrumentation.MusicAgent", true, appLoader);
-		INST = (Instrumentation) musicAgent.getDeclaredField("INST").get(null);
+		try {
+			Class<?> musicAgent = Class.forName("net.cursedmc.yqh.impl.instrumentation.MusicAgent", true, appLoader);
+			INST = (Instrumentation) musicAgent.getDeclaredField("INST").get(null);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

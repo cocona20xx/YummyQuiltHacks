@@ -25,59 +25,59 @@ public class UnsafeKnotClassLoader extends KnotClassLoader {
 	public static final Logger LOGGER = LogManager.getLogger("YummyQuiltHacks/UnsafeKnotClassLoader");
 	public static final Object2ReferenceMap<String, Class<?>> classes = new Object2ReferenceOpenHashMap<>();
 	public static final KnotClassDelegate delegate = ((KnotClassLoader) knotLoader).getDelegate();
-	
+
 	UnsafeKnotClassLoader(boolean isDevelopment, EnvType envType, GameProvider provider) {
 		super(isDevelopment, envType, provider);
 	}
-	
+
 	public Class<?> defineClass(String name, byte[] bytes) {
 		Class<?> klass = UnsafeUtil.defineClass(name, bytes, null, null);
-		
+
 		classes.put(name, klass);
-		
+
 		return klass;
 	}
-	
+
 	@Override
 	public Class<?> defineClassFwd(String name, byte[] b, int off, int len, CodeSource cs) {
 		Class<?> klass = UnsafeUtil.defineClass(name, b, off, len, this, null);
-		
+
 		classes.put(name, klass);
-		
+
 		return klass;
 	}
-	
+
 	@Override
 	public boolean isClassLoaded(String name) {
 		synchronized (super.getClassLoadingLock(name)) {
 			return super.findLoadedClass(name) != null || classes.containsKey(name);
 		}
 	}
-	
-	public Class<?> loadClass(String name, boolean resolve, boolean allowFromParent) {
+
+	public Class<?> loadClass(String name, boolean resolve, boolean allowFromParent) throws ClassNotFoundException {
 		synchronized (this.getClassLoadingLock(name)) {
 			Class<?> klass = classes.get(name);
-			
+
 			if (klass == null) {
 				klass = this.findLoadedClass(name);
-				
+
 				if (klass == null) {
 					if (!name.startsWith("java.")) {
 						byte[] input = delegate.getPostMixinClassByteArray(name, allowFromParent);
-						
+
 						if (input != null) {
 							KnotClassDelegate.Metadata metadata = delegate.getMetadata(name, parent.getResource(LoaderUtil.getClassFileName(name)));
-							
+
 							int pkgDelimiterPos = name.lastIndexOf('.');
-							
+
 							if (pkgDelimiterPos > 0) {
 								String pkgString = name.substring(0, pkgDelimiterPos);
-								
+
 								if (this.getPackage(pkgString) == null) {
 									this.definePackage(pkgString, null, null, null, null, null, null, null);
 								}
 							}
-							
+
 							klass = super.defineClass(name, input, 0, input.length, metadata.codeSource);
 						} else {
 							klass = appLoader.loadClass(name);
@@ -87,31 +87,31 @@ public class UnsafeKnotClassLoader extends KnotClassLoader {
 					}
 				}
 			}
-			
+
 			classes.put(name, klass);
-			
+
 			if (resolve) {
 				this.resolveClass(klass);
 			}
-			
+
 			return klass;
 		}
 	}
-	
+
 	@Override
-	public Class<?> loadClass(String name, boolean resolve) {
+	public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
 		return this.loadClass(name, resolve, false);
 	}
-	
+
 	static {
 		LOGGER.info("Loaded UnsafeKnotClassLoader");
-		
+
 		classes.put("org.quiltmc.loader.impl.launch.knot.KnotClassLoader", KnotClassLoader.class);
 		classes.put("org.quiltmc.loader.impl.launch.knot.UnsafeKnotClassLoader", UnsafeKnotClassLoader.class);
-		
+
 		classes.put("net.devtech.grossfabrichacks.unsafe.UnsafeUtil", UnsafeUtil.class);
 		classes.put("net.devtech.grossfabrichacks.unsafe.UnsafeUtil$FirstInt", UnsafeUtil.FirstInt.class);
-		
+
 		String[] manualLoad = {
 				"net.cursedmc.yqh.api.instrumentation.Music",
 				"net.cursedmc.yqh.api.instrumentation.Music$1",
@@ -121,11 +121,11 @@ public class UnsafeKnotClassLoader extends KnotClassLoader {
 				"net.cursedmc.yqh.api.entrypoints.PreMixin",
 				"org.spongepowered.asm.mixin.transformer.HackedMixinProcessor",
 		};
-		
+
 		for (String name : manualLoad) {
 			classes.put(name, UnsafeUtil.findAndDefineClass(name, appLoader));
 		}
-		
+
 		LOGGER.info("Loaded classes with app loader");
 	}
 }
