@@ -48,7 +48,6 @@ repositories {
 }
 
 
-val modImplementationInclude by configurations.register("modImplementationInclude")
 
 // All the dependencies are declared at gradle/libs.version.toml and referenced with "libs.<id>"
 // See https://docs.gradle.org/current/userguide/platforms.html for information on how version catalogs work.
@@ -61,13 +60,19 @@ dependencies {
 	modImplementation(libs.quilt.loader)
 
 	@Suppress("UnstableApiUsage")
-	modImplementationInclude(libs.qsl.base)
+	modImplementation(libs.qsl.base)
 
-	modImplementationInclude("org.ow2.asm", "asm-commons", "9.3")
-	modImplementationInclude("net.auoeke", "reflect", "5.+")
-	modImplementationInclude("net.gudenau.lib", "unsafe", "latest.release")
-	modImplementationInclude("com.enderzombi102", "EnderLib", "0.2.0")
-	modImplementationInclude("net.bytebuddy", "byte-buddy-agent", "1.12.+")
+	modImplementation("org.ow2.asm", "asm-commons", "9.3")
+	modImplementation("net.auoeke", "reflect", "5.+")
+	modImplementation("net.gudenau.lib", "unsafe", "latest.release")
+	modImplementation("com.enderzombi102", "EnderLib", "0.2.0")
+	modImplementation("net.bytebuddy", "byte-buddy-agent", "1.12.+")
+
+    include("org.ow2.asm", "asm-commons", "9.3")
+    include("net.auoeke", "reflect", "5.+")
+    include("net.gudenau.lib", "unsafe", "latest.release")
+    include("com.enderzombi102", "EnderLib", "0.2.0")
+    include("net.bytebuddy", "byte-buddy-agent", "1.12.+")
 
 	modRuntimeOnly("com.terraformersmc", "modmenu", "4.2.0-beta.2")
 	modRuntimeOnly("maven.modrinth", "wthit", "quilt-5.15.1")
@@ -80,8 +85,6 @@ dependencies {
 
 	annotationProcessor("net.auoeke:uncheck:latest.release")
 
-	add(sourceSets.main.get().getTaskName("mod", JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME), modImplementationInclude)
-	add(net.fabricmc.loom.util.Constants.Configurations.INCLUDE, modImplementationInclude)
 }
 
 tasks.processResources {
