@@ -7,8 +7,7 @@ import net.fabricmc.api.EnvType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.*;
 import org.quiltmc.loader.api.QuiltLoader;
 import org.quiltmc.loader.api.minecraft.MinecraftQuiltLoader;
 
@@ -20,8 +19,8 @@ public class YummyQuiltHacksPreMixin implements PreMixin {
 		LOGGER.info("pre_mixin test");
 		Mixout.TransformEvent.registerPreMixin((name, cn) -> {
 			if (MinecraftQuiltLoader.getEnvironmentType() == EnvType.SERVER) return;
-			final String splashTextClass;
-			final String getMethod;
+			String splashTextClass;
+			String getMethod;
 			if (QuiltLoader.isDevelopmentEnvironment()) {
 				splashTextClass = "net/minecraft/client/resource/SplashTextResourceSupplier";
 				getMethod = "get";
@@ -31,7 +30,7 @@ public class YummyQuiltHacksPreMixin implements PreMixin {
 			}
 			if (splashTextClass.equals(cn.name)) {
 				LOGGER.info("target class found");
-				for (final MethodNode m : cn.methods) {
+				for (MethodNode m : cn.methods) {
 					if (getMethod.equals(m.name)) {
 						LOGGER.info("target method found");
 						m.instructions.clear();
@@ -50,10 +49,10 @@ public class YummyQuiltHacksPreMixin implements PreMixin {
 		
 		Mixout.TransformEvent.registerPreMixin((name, cn) -> {
 			if (MinecraftQuiltLoader.getEnvironmentType() == EnvType.SERVER) return;
-			final String screenClass;
-			final String textClass;
-			final String screenTitleField;
-			final String textOfMethod;
+			String screenClass;
+			String textClass;
+			String screenTitleField;
+			String textOfMethod;
 			if (QuiltLoader.isDevelopmentEnvironment()) {
 				screenClass = "net/minecraft/client/gui/screen/Screen";
 				textClass = "net/minecraft/text/Text";
@@ -67,21 +66,21 @@ public class YummyQuiltHacksPreMixin implements PreMixin {
 			}
 			if (screenClass.replace('/', '.').equals(name)) {
 				LOGGER.info("screen class found");
-				for (final FieldNode f : cn.fields) {
+				for (FieldNode f : cn.fields) {
 					if (screenTitleField.equals(f.name)) {
 						LOGGER.info("target field found");
 						f.access = f.access ^ Opcodes.ACC_FINAL;
 					}
 				}
-				for (final MethodNode m : cn.methods) {
+				for (MethodNode m : cn.methods) {
 					if ("<init>".equals(m.name)) {
 						LOGGER.info("target method found");
 						m.instructions.insertBefore(m.instructions.get(m.instructions.size() - 2), ASMFormatParser.parseInstructions("""
-								A:
-								LINE A 1
-								ALOAD 0
-								LDC "experience the asm™"
-								""" + "INVOKESTATIC_itf " + textClass + '.' + textOfMethod + "(Ljava/lang/String;)L" + textClass + ';' +
+                        A:
+                        LINE A 1
+                        ALOAD 0
+                        LDC "experience the asm™"
+                        """ + "INVOKESTATIC_itf " + textClass + '.' + textOfMethod + "(Ljava/lang/String;)L" + textClass + ';' +
 								"\nPUTFIELD " + screenClass + '.' + screenTitleField + " L" + textClass + ';' + """
 								
 								B:

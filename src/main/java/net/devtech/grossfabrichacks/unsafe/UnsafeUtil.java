@@ -383,7 +383,6 @@ import java.lang.reflect.Array;
 import java.security.ProtectionDomain;
 
 //https://github.com/Devan-Kerman/GrossFabricHacks/blob/ae137cd46b262c0ef2ed6f982d1bbbeca0a6c4da/src/main/java/net/devtech/grossfabrichacks/unsafe/UnsafeUtil.java
-
 /**
  * works across all normal JVMs I think
  */
@@ -410,8 +409,8 @@ public class UnsafeUtil extends Unsafe {
 	 * set the first 4 bytes of an object to something, this can be used to mutate the size of an array
 	 */
 	public static void setFirstInt(Object object, int val) {
-		final long orig = getKlass(object);
-		final FirstInt firstInt = unsafeCast(object, FIRST_INT_KLASS);
+		long orig = getKlass(object);
+		FirstInt firstInt = unsafeCast(object, FIRST_INT_KLASS);
 		firstInt.val = val;
 		unsafeCast(object, orig);
 	}
@@ -430,7 +429,7 @@ public class UnsafeUtil extends Unsafe {
 	 * @return a non-copied casted array
 	 */
 	public static <T> T upcastArray(Object array, int newType, int conversion) {
-		final FirstInt wrapper = unsafeCast(array, FIRST_INT_KLASS);
+		FirstInt wrapper = unsafeCast(array, FIRST_INT_KLASS);
 		wrapper.val /= conversion;
 		return unsafeCast(array, newType);
 	}
@@ -448,7 +447,7 @@ public class UnsafeUtil extends Unsafe {
 	 * @return a non-copied casted array
 	 */
 	public static <T> T downcastArray(Object array, int newType, int conversion) {
-		final FirstInt wrapper = unsafeCast(array, FIRST_INT_KLASS);
+		FirstInt wrapper = unsafeCast(array, FIRST_INT_KLASS);
 		wrapper.val *= conversion;
 		return unsafeCast(array, newType);
 	}
@@ -485,15 +484,15 @@ public class UnsafeUtil extends Unsafe {
 		return (B[]) obj;
 	}
 	
-	public static <B> B defineAndInitializeAndUnsafeCast(Object object, String klass, ClassLoader loader) {
+	public static <B> B defineAndInitializeAndUnsafeCast(final Object object, final String klass, final ClassLoader loader) {
 		return unsafeCast(object, getKlassFromClass(findAndDefineAndInitializeClass(klass, loader)));
 	}
 	
-	public static <B> B unsafeCast(Object object, String klass) {
+	public static <B> B unsafeCast(final Object object, final String klass) {
 		return unsafeCast(object, loadClass(klass));
 	}
 	
-	public static <B> B unsafeCast(Object object, Class<?> klass) {
+	public static <B> B unsafeCast(final Object object, final Class<?> klass) {
 		return unsafeCast(object, getKlassFromClass(klass));
 	}
 	
@@ -550,7 +549,7 @@ public class UnsafeUtil extends Unsafe {
 		return getInt(type, CLASS_KLASS_OFFSET);
 	}
 	
-	public static void putInt(Object object, String field, int value) {
+	public static void putInt(final Object object, final String field, final int value) {
 		try {
 			putInt(object, objectFieldOffset(object.getClass().getDeclaredField(field)), value);
 		} catch (final NoSuchFieldException exception) {
@@ -558,7 +557,7 @@ public class UnsafeUtil extends Unsafe {
 		}
 	}
 	
-	public static void putInt(Class<?> klass, Object object, String field, int value) {
+	public static void putInt(final Class<?> klass, final Object object, final String field, final int value) {
 		try {
 			putInt(object, objectFieldOffset(klass.getDeclaredField(field)), value);
 		} catch (final NoSuchFieldException exception) {
@@ -566,7 +565,7 @@ public class UnsafeUtil extends Unsafe {
 		}
 	}
 	
-	public static <T> T getObject(long address) {
+	public static <T> T getObject(final long address) {
 		final Object[] box = new Object[1];
 		final long baseOffset = arrayBaseOffset(Object[].class);
 		
@@ -575,26 +574,26 @@ public class UnsafeUtil extends Unsafe {
 		return (T) box[0];
 	}
 	
-	public static long addressOf(Object object) {
+	public static long addressOf(final Object object) {
 		return addressOf(0, object);
 	}
 	
-	public static long addressOf(int index, Object... objects) {
+	public static long addressOf(final int index, final Object... objects) {
 		final long offset = arrayBaseOffset(objects.getClass());
 		final long scale = arrayIndexScale(objects.getClass());
 		
 		return (getInt(objects, offset + index * scale) & 0xFFFFFFFL) * addressFactor;
 	}
 	
-	public static <T> Class<T> defineAndInitialize(String binaryName, byte[] klass) {
+	public static <T> Class<T> defineAndInitialize(final String binaryName, final byte[] klass) {
 		return defineAndInitialize(binaryName, klass, null, null);
 	}
 	
-	public static <T> Class<T> defineAndInitialize(String binaryName, byte[] klass, ClassLoader loader) {
+	public static <T> Class<T> defineAndInitialize(final String binaryName, final byte[] klass, final ClassLoader loader) {
 		return defineAndInitialize(binaryName, klass, loader, null);
 	}
 	
-	public static <T> Class<T> defineAndInitialize(String binaryName, byte[] bytecode, ClassLoader loader, ProtectionDomain protectionDomain) {
+	public static <T> Class<T> defineAndInitialize(final String binaryName, final byte[] bytecode, final ClassLoader loader, final ProtectionDomain protectionDomain) {
 		final Class<?> klass;
 		
 		ensureClassInitialized(klass = defineClass(binaryName, bytecode, 0, bytecode.length, loader, protectionDomain));
@@ -602,36 +601,35 @@ public class UnsafeUtil extends Unsafe {
 		return (Class<T>) klass;
 	}
 	
-	public static <T> Class<T> initializeClass(Class<?> klass) {
+	public static <T> Class<T> initializeClass(final Class<?> klass) {
 		ensureClassInitialized(klass);
 		
 		return (Class<T>) klass;
 	}
 	
-	public static <T> Class<T> defineClass(String binaryName, byte[] klass) {
+	public static <T> Class<T> defineClass(final String binaryName, final byte[] klass) {
 		return defineClass(binaryName, klass, 0, klass.length, null, null);
 	}
 	
-	public static <T> Class<T> defineClass(String binaryName, byte[] klass, ClassLoader loader) {
+	public static <T> Class<T> defineClass(final String binaryName, final byte[] klass, final ClassLoader loader) {
 		return defineClass(binaryName, klass, 0, klass.length, loader, null);
 	}
 	
-	public static <T> Class<T> defineClass(String binaryName, byte[] klass,
-	                                       ClassLoader loader, ProtectionDomain protectionDomain) {
+	public static <T> Class<T> defineClass(final String binaryName, final byte[] klass,
+	                                       final ClassLoader loader, final ProtectionDomain protectionDomain) {
 		return defineClass(binaryName, klass, 0, klass.length, loader, protectionDomain);
 	}
 	
-	public static <T> Class<T> findAndDefineClass(String binaryName, ClassLoader loader) {
+	public static <T> Class<T> findAndDefineClass(final String binaryName, final ClassLoader loader) {
 		return defineClass(binaryName, findClass(binaryName), loader);
 	}
 	
-	public static byte[] findClass(String binaryName) {
+	public static byte[] findClass(final String binaryName) {
 		try {
 			final InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(binaryName.replace('.', '/') + ".class");
 			final byte[] bytecode = new byte[stream.available()];
 			
-			while (stream.read(bytecode) != -1) {
-			}
+			while (stream.read(bytecode) != -1) {}
 			
 			return bytecode;
 		} catch (final Throwable throwable) {
@@ -639,7 +637,7 @@ public class UnsafeUtil extends Unsafe {
 		}
 	}
 	
-	public static <T> Class<T> findAndDefineAndInitializeClass(String binaryName, ClassLoader loader) {
+	public static <T> Class<T> findAndDefineAndInitializeClass(final String binaryName, final ClassLoader loader) {
 		try {
 			return initializeClass(findAndDefineClass(binaryName, loader));
 		} catch (final Throwable throwable) {
@@ -647,7 +645,7 @@ public class UnsafeUtil extends Unsafe {
 		}
 	}
 	
-	public static <T> Class<T> loadClass(String name) {
+	public static <T> Class<T> loadClass(final String name) {
 		try {
 			return (Class<T>) Class.forName(name);
 		} catch (final ClassNotFoundException exception) {
@@ -655,7 +653,7 @@ public class UnsafeUtil extends Unsafe {
 		}
 	}
 	
-	public static <T> Class<T> loadClass(String name, boolean initialize, ClassLoader loader) {
+	public static <T> Class<T> loadClass(final String name, final boolean initialize, final ClassLoader loader) {
 		try {
 			return (Class<T>) Class.forName(name, initialize, loader);
 		} catch (final ClassNotFoundException exception) {

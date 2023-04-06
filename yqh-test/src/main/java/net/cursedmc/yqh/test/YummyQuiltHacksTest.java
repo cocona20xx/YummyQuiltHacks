@@ -9,7 +9,7 @@ public class YummyQuiltHacksTest implements ModInitializer {
 	private static final Logger LOGGER = LogManager.getLogger("YummyQuiltHacks/Test");
 	
 	@Override
-	public void onInitialize(final ModContainer mod) {
+	public void onInitialize(ModContainer mod) {
 		LOGGER.info("hi");
 	}
 }

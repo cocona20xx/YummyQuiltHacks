@@ -4,7 +4,6 @@ plugins {
 	java
 	alias(libs.plugins.quilt.loom)
 	`maven-publish`
-	checkstyle
 }
 
 val modVersion: String by project
@@ -48,6 +47,7 @@ repositories {
 	}
 }
 
+
 val modImplementationInclude by configurations.register("modImplementationInclude")
 
 // All the dependencies are declared at gradle/libs.version.toml and referenced with "libs.<id>"
@@ -80,16 +80,13 @@ dependencies {
 	
 	annotationProcessor("net.auoeke:uncheck:latest.release")
 	
-	add(
-		sourceSets.main.get().getTaskName("mod", JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME),
-		modImplementationInclude
-	)
+	add(sourceSets.main.get().getTaskName("mod", JavaPlugin.IMPLEMENTATION_CONFIGURATION_NAME), modImplementationInclude)
 	add(net.fabricmc.loom.util.Constants.Configurations.INCLUDE, modImplementationInclude)
 }
 
 tasks.processResources {
 	inputs.property("version", version)
-	
+
 	filesMatching("quilt.mod.json") {
 		expand("group" to group, "id" to modId, "version" to version)
 	}
@@ -137,7 +134,6 @@ tasks.withType<AbstractArchiveTask> {
 	from("LICENSE") {
 		rename { "${it}_$modId" }
 	}
-	dependsOn("checkstyleMain")
 }
 
 // Configure the maven publication
@@ -156,8 +152,4 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
-}
-
-tasks.withType<Checkstyle>().configureEach {
-	configFile = File("${rootDir}/checkstyle.xml")
 }

@@ -13,36 +13,34 @@ import java.util.regex.Pattern;
 import static org.objectweb.asm.Opcodes.*;
 
 //https://gist.github.com/RealRTTV/6d4576998f3780c9766a63caa5ab9ae1
-public final class ASMFormatParser {
+public class ASMFormatParser {
 	
 	private static final String PLACEHOLDER = "!YQH!";
 	
 	// fixme: fix mapping stuff
-	
 	/**
 	 * Finds any unmapped {@code net.minecraft.*} classes/methods/fields and maps them.
-	 *
 	 * @param unmapped the unmapped string
 	 * @return the mapped string
 	 */
 	public static String mapString(String unmapped) {
 		// map methods
-		final Pattern methodPattern = Pattern.compile("(net/minecraft/.+)\\.(.+)(\\(.+\\)\\S+)");
-		final Matcher methodMatcher = methodPattern.matcher(unmapped);
+		Pattern methodPattern = Pattern.compile("(net/minecraft/.+)\\.(.+)(\\(.+\\)\\S+)");
+		Matcher methodMatcher = methodPattern.matcher(unmapped);
 		while (methodMatcher.find()) {
 			unmapped = (unmapped.replace(methodMatcher.group(), MapUtils.mappedClass(methodMatcher.group(1).replaceAll("/", ".")).replaceAll("\\.", "/") + '.' + MapUtils.mappedMethod(methodMatcher.group(1).replaceAll("/", "."), methodMatcher.group(2), methodMatcher.group(3)) + methodMatcher.group(3))).replaceAll("net/minecraft", "net/" + PLACEHOLDER);
 		}
 		
 		// map fields
-		final Pattern fieldPattern = Pattern.compile("(net/minecraft/.+\\.([^(\\s]+)) (\\[?(?:[BCDFIJSZ]|(?:L.+;)))");
-		final Matcher fieldMatcher = fieldPattern.matcher(unmapped);
+		Pattern fieldPattern = Pattern.compile("(net/minecraft/.+\\.([^(\\s]+)) (\\[?(?:[BCDFIJSZ]|(?:L.+;)))");
+		Matcher fieldMatcher = fieldPattern.matcher(unmapped);
 		while (fieldMatcher.find()) {
 			unmapped = unmapped.replace(fieldMatcher.group(), MapUtils.mappedField(fieldMatcher.group(1).replaceAll("/", "."), fieldMatcher.group(2), fieldMatcher.group(3)).replaceAll("\\.(?![A-Za-z]+[( ])", "/").replaceAll("net/minecraft", "net/" + PLACEHOLDER));
 		}
 		
 		// map classes
-		final Pattern classPattern = Pattern.compile("net/minecraft/[^;.\\s]+");
-		final Matcher classMatcher = classPattern.matcher(unmapped);
+		Pattern classPattern = Pattern.compile("net/minecraft/[^;.\\s]+");
+		Matcher classMatcher = classPattern.matcher(unmapped);
 		while (classMatcher.find()) {
 			unmapped = unmapped.replace(classMatcher.group(), MapUtils.mappedClass(classMatcher.group().replaceAll("/", "."))).replaceAll("\\.(?![A-Za-z]+[( ])", "/");
 		}
@@ -50,33 +48,33 @@ public final class ASMFormatParser {
 		return unmapped.replaceAll("net/" + PLACEHOLDER, "net/minecraft");
 	}
 	
-	public static InsnList parseInstructions(final String unmapped, final MethodNode method) {
+	public static InsnList parseInstructions(String unmapped, MethodNode method) {
 		return parseInstructions(unmapped, method, true);
 	}
 	
-	public static InsnList parseInstructions(final String unmapped, final MethodNode method, final boolean map) {
-		final String mapped = map ? mapString(unmapped) : unmapped; // the mapped string
+	public static InsnList parseInstructions(String unmapped, MethodNode method, boolean map) {
+		String mapped = map ? mapString(unmapped) : unmapped; // the mapped string
 		
-		final InsnList list = new InsnList();
-		final Map<String, LabelNode> labels = new HashMap<>();
-		final Map<String, LabelNode> vanillaLabels = new HashMap<>();
+		InsnList list = new InsnList();
+		Map<String, LabelNode> labels = new HashMap<>();
+		Map<String, LabelNode> vanillaLabels = new HashMap<>();
 		
-		final String[] lines = mapped.split("\n");
+		String[] lines = mapped.split("\n");
 		
-		for (final String line : lines) {
+		for (String line : lines) {
 			if (line.matches("[A-Za-z]+:")) {
 				labels.put(line.substring(0, line.length() - 1), new LabelNode());
 			}
 		}
 		
 		int count = 0;
-		for (final AbstractInsnNode insn : method.instructions) {
+		for (AbstractInsnNode insn : method.instructions) {
 			if (insn instanceof LineNumberNode lineNumberNode) {
 				vanillaLabels.put(getLabelName(count++), lineNumberNode.start);
 			}
 		}
 		
-		for (final String line : lines) {
+		for (String line : lines) {
 			parseInstruction(line, list, labels, vanillaLabels);
 		}
 		
@@ -85,7 +83,7 @@ public final class ASMFormatParser {
 	
 	private static String getLabelName(int num) {
 		final int len = 16;
-		final byte[] characters = new byte[len];
+		byte[] characters = new byte[len];
 		int i;
 		num++;
 		for (i = len - 1; num != 0; i--) {
@@ -96,7 +94,7 @@ public final class ASMFormatParser {
 		// tks Geolykt ♥
 	}
 	
-	private static LabelNode getLabel(String str, final Map<String, LabelNode> labels, final Map<String, LabelNode> vanillaLabels) {
+	private static LabelNode getLabel(String str, Map<String, LabelNode> labels, Map<String, LabelNode> vanillaLabels) {
 		if (str.endsWith(":")) {
 			str = str.substring(0, str.length() - 1);
 		}
@@ -104,14 +102,14 @@ public final class ASMFormatParser {
 		return Optional.ofNullable(labels.get(str)).orElseGet(() -> Optional.ofNullable(vanillaLabels.get(otherStr)).orElseThrow(NodeNotFoundException::new));
 	}
 	
-	private static void parseInstruction(final String line, final InsnList list, final Map<String, LabelNode> labels, final Map<String, LabelNode> vanillaLabels) {
-		final String[] words = new String[10]; // seems good enough
+	private static void parseInstruction(String line, InsnList list, Map<String, LabelNode> labels, Map<String, LabelNode> vanillaLabels) {
+		String[] words = new String[10]; // seems good enough
 		
 		boolean quote = false;
 		int index = 0;
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < line.length(); i++) {
-			final char cur = line.charAt(i);
+			char cur = line.charAt(i);
 			if (cur == '"') {
 				quote = !quote;
 			}
@@ -128,8 +126,7 @@ public final class ASMFormatParser {
 		words[index] = sb.toString();
 		
 		switch (words[0]) {
-			case "NOP", "DEFINE" -> {
-			}
+			case "NOP", "DEFINE" -> {}
 			case "ACONST_NULL" -> list.add(new InsnNode(ACONST_NULL));
 			case "ICONST_M1" -> list.add(new InsnNode(ICONST_M1));
 			case "ICONST_0" -> list.add(new InsnNode(ICONST_0));
@@ -261,36 +258,24 @@ public final class ASMFormatParser {
 			case "GOTO" -> list.add(new JumpInsnNode(GOTO, getLabel(words[1], labels, vanillaLabels)));
 			case "JSR" -> list.add(new JumpInsnNode(JSR, getLabel(words[1], labels, vanillaLabels)));
 			case "RET" -> list.add(new VarInsnNode(RET, Integer.parseInt(words[1])));
-			case "TABLESWITCH" ->
-					list.add(new TableSwitchInsnNode(Integer.parseInt(words[1].replaceAll("range\\[|]", "").split(":")[0]), Integer.parseInt(words[1].replaceAll("range\\[|]", "").split(":")[1]), getLabel(words[3].replaceAll("default\\[", "").replaceAll("]", ""), labels, vanillaLabels), getLabels(words[2], labels, vanillaLabels)));
-			case "LOOKUPSWITCH" ->
-					list.add(new LookupSwitchInsnNode(getLabel(words[2].replaceAll("default\\[", "").replaceAll("]", ""), labels, vanillaLabels), getLookupKeys(words[1]), getLabelKeys(words[1], labels, vanillaLabels)));
+			case "TABLESWITCH" -> list.add(new TableSwitchInsnNode(Integer.parseInt(words[1].replaceAll("range\\[|]", "").split(":")[0]), Integer.parseInt(words[1].replaceAll("range\\[|]", "").split(":")[1]), getLabel(words[3].replaceAll("default\\[", "").replaceAll("]", ""), labels, vanillaLabels), getLabels(words[2], labels, vanillaLabels)));
+			case "LOOKUPSWITCH" -> list.add(new LookupSwitchInsnNode(getLabel(words[2].replaceAll("default\\[", "").replaceAll("]", ""), labels, vanillaLabels), getLookupKeys(words[1]), getLabelKeys(words[1], labels, vanillaLabels)));
 			case "IRETURN" -> list.add(new InsnNode(IRETURN));
 			case "LRETURN" -> list.add(new InsnNode(LRETURN));
 			case "FRETURN" -> list.add(new InsnNode(FRETURN));
 			case "DRETURN" -> list.add(new InsnNode(DRETURN));
 			case "ARETURN" -> list.add(new InsnNode(ARETURN));
 			case "RETURN" -> list.add(new InsnNode(RETURN));
-			case "GETSTATIC" ->
-					list.add(new FieldInsnNode(GETSTATIC, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
-			case "PUTSTATIC" ->
-					list.add(new FieldInsnNode(PUTSTATIC, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
-			case "GETFIELD" ->
-					list.add(new FieldInsnNode(GETFIELD, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
-			case "PUTFIELD" ->
-					list.add(new FieldInsnNode(PUTFIELD, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
-			case "INVOKEVIRTUAL" ->
-					list.add(new MethodInsnNode(INVOKEVIRTUAL, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
-			case "INVOKESPECIAL" ->
-					list.add(new MethodInsnNode(INVOKESPECIAL, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
-			case "INVOKESTATIC" ->
-					list.add(new MethodInsnNode(INVOKESTATIC, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
-			case "INVOKESTATIC_itf" ->
-					list.add(new MethodInsnNode(INVOKESTATIC, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1]), true));
-			case "INVOKEINTERFACE" ->
-					list.add(new MethodInsnNode(INVOKEINTERFACE, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
-			case "INVOKEDYNAMIC" ->
-					list.add(new MethodInsnNode(INVOKEDYNAMIC, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
+			case "GETSTATIC" -> list.add(new FieldInsnNode(GETSTATIC, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
+			case "PUTSTATIC" -> list.add(new FieldInsnNode(PUTSTATIC, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
+			case "GETFIELD" -> list.add(new FieldInsnNode(GETFIELD, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
+			case "PUTFIELD" -> list.add(new FieldInsnNode(PUTFIELD, words[1].split("\\.")[0], words[1].split("\\.")[1], words[2]));
+			case "INVOKEVIRTUAL" -> list.add(new MethodInsnNode(INVOKEVIRTUAL, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
+			case "INVOKESPECIAL" -> list.add(new MethodInsnNode(INVOKESPECIAL, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
+			case "INVOKESTATIC" -> list.add(new MethodInsnNode(INVOKESTATIC, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
+			case "INVOKESTATIC_itf" -> list.add(new MethodInsnNode(INVOKESTATIC, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1]), true));
+			case "INVOKEINTERFACE" -> list.add(new MethodInsnNode(INVOKEINTERFACE, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
+			case "INVOKEDYNAMIC" -> list.add(new MethodInsnNode(INVOKEDYNAMIC, words[1].split("[.(]")[0], words[1].split("[.(]")[1], getDescriptor(words[1])));
 			case "NEW" -> list.add(new TypeInsnNode(NEW, words[1]));
 			case "NEWARRAY" -> list.add(new IntInsnNode(NEWARRAY, getArrayType(words[1])));
 			case "ANEWARRAY" -> list.add(new TypeInsnNode(ANEWARRAY, words[1]));
@@ -303,8 +288,7 @@ public final class ASMFormatParser {
 			case "MULTIANEWARRAY" -> list.add(new MultiANewArrayInsnNode(words[1], Integer.parseInt(words[2])));
 			case "IFNULL" -> list.add(new JumpInsnNode(IFNULL, getLabel(words[1], labels, vanillaLabels)));
 			case "IFNONNULL" -> list.add(new JumpInsnNode(IFNONNULL, getLabel(words[1], labels, vanillaLabels)));
-			case "LINE" ->
-					list.add(new LineNumberNode(Integer.parseInt(words[2]), getLabel(words[1], labels, vanillaLabels)));
+			case "LINE" -> list.add(new LineNumberNode(Integer.parseInt(words[2]), getLabel(words[1], labels, vanillaLabels)));
 			default -> {
 				if (words[0].matches("[A-Za-z]+:")) {
 					list.add(labels.get(words[0].substring(0, words[0].length() - 1)));
@@ -313,7 +297,7 @@ public final class ASMFormatParser {
 		}
 	}
 	
-	private static int getArrayType(final String str) {
+	private static int getArrayType(String str) {
 		return switch (str) {
 			case "Z" -> T_BOOLEAN;
 			case "C" -> T_CHAR;
@@ -327,23 +311,23 @@ public final class ASMFormatParser {
 		};
 	}
 	
-	private static String getDescriptor(final String str) {
+	private static String getDescriptor(String str) {
 		return str.substring(str.indexOf('('));
 	}
 	
-	private static LabelNode[] getLabels(final String str, final Map<String, LabelNode> labels, final Map<String, LabelNode> vanillaLabels) {
-		final String[] strings = str.replaceAll("labels\\[|]", "").split(", ");
-		final LabelNode[] nodes = new LabelNode[strings.length];
+	private static LabelNode[] getLabels(String str, Map<String, LabelNode> labels, Map<String, LabelNode> vanillaLabels) {
+		String[] strings = str.replaceAll("labels\\[|]", "").split(", ");
+		LabelNode[] nodes = new LabelNode[strings.length];
 		for (int i = 0; i < strings.length; i++) {
 			nodes[i] = getLabel(strings[i], labels, vanillaLabels);
 		}
 		return nodes;
 	}
 	
-	private static LabelNode[] getLabelKeys(String str, final Map<String, LabelNode> labels, final Map<String, LabelNode> vanillaLabels) {
+	private static LabelNode[] getLabelKeys(String str, Map<String, LabelNode> labels, Map<String, LabelNode> vanillaLabels) {
 		str = str.substring(8, str.length() - 1).replaceAll("[0-9]+=", "");
-		final String[] strings = str.split(", ");
-		final LabelNode[] keys = new LabelNode[strings.length];
+		String[] strings = str.split(", ");
+		LabelNode[] keys = new LabelNode[strings.length];
 		for (int i = 0; i < strings.length; i++) {
 			keys[i] = getLabel(strings[i], labels, vanillaLabels);
 		}
@@ -352,15 +336,15 @@ public final class ASMFormatParser {
 	
 	private static int[] getLookupKeys(String str) {
 		str = str.substring(8, str.length() - 1).replaceAll("=[A-Za-z]+", "");
-		final String[] strings = str.split(", ");
-		final int[] keys = new int[strings.length];
+		String[] strings = str.split(", ");
+		int[] keys = new int[strings.length];
 		for (int i = 0; i < strings.length; i++) {
 			keys[i] = Integer.parseInt(strings[i]);
 		}
 		return keys;
 	}
 	
-	private static Object getLdc(final String str) {
+	private static Object getLdc(String str) {
 		if (str.equals("\"\"")) {
 			return "";
 		} else if (str.startsWith("\"") && str.endsWith("\"")) {
@@ -379,15 +363,15 @@ public final class ASMFormatParser {
 			super();
 		}
 		
-		public NodeNotFoundException(final String s) {
+		public NodeNotFoundException(String s) {
 			super(s);
 		}
 		
-		public NodeNotFoundException(final String message, final Throwable cause) {
+		public NodeNotFoundException(String message, Throwable cause) {
 			super(message, cause);
 		}
 		
-		public NodeNotFoundException(final Throwable cause) {
+		public NodeNotFoundException(Throwable cause) {
 			super(cause);
 		}
 	}
