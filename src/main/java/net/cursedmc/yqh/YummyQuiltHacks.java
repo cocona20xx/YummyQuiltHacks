@@ -1,10 +1,8 @@
 package net.cursedmc.yqh;
 
-import com.enderzombi102.enderlib.BetterRuntimeUtil;
 import net.auoeke.reflect.ClassDefiner;
 import net.auoeke.reflect.Classes;
 import net.bytebuddy.agent.ByteBuddyAgent;
-import net.cursedmc.yqh.api.entrypoints.PreMixin;
 import net.cursedmc.yqh.api.instrumentation.Music;
 import net.cursedmc.yqh.api.mixin.Mixout;
 import net.devtech.grossfabrichacks.unsafe.UnsafeUtil;
@@ -15,9 +13,7 @@ import org.apache.logging.log4j.Logger;
 import org.quiltmc.loader.api.LanguageAdapter;
 import org.quiltmc.loader.api.ModContainer;
 import org.quiltmc.loader.api.QuiltLoader;
-import org.quiltmc.loader.api.entrypoint.EntrypointContainer;
 import org.quiltmc.loader.api.plugin.ModMetadataExt;
-import org.quiltmc.loader.impl.ModContainerImpl;
 import org.quiltmc.loader.impl.launch.knot.Knot;
 import org.quiltmc.loader.impl.metadata.qmj.AdapterLoadableClassEntry;
 
@@ -25,8 +21,6 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.jar.JarFile;
 

@@ -69,10 +69,10 @@ dependencies {
 	modImplementationInclude("com.enderzombi102", "EnderLib", "0.2.0")
 	modImplementationInclude("net.bytebuddy", "byte-buddy-agent", "1.12.+")
 
-	modRuntimeOnly("com.terraformersmc", "modmenu", "4.0.0")
-	modRuntimeOnly("maven.modrinth", "wthit", "fabric-5.4.3")
-	modRuntimeOnly("maven.modrinth", "badpackets", "fabric-0.1.2")
-	modRuntimeOnly("maven.modrinth", "emi", "0.2.0+1.19")
+	modRuntimeOnly("com.terraformersmc", "modmenu", "4.2.0-beta.2")
+	modRuntimeOnly("maven.modrinth", "wthit", "quilt-5.15.1")
+	modRuntimeOnly("maven.modrinth", "badpackets", "fabric-0.2.1")
+	modRuntimeOnly("maven.modrinth", "emi", "0.7.3+1.19.2")
 
 	// QSL is not a complete API; You will need Quilted Fabric API to fill in the gaps.
 	// Quilted Fabric API will automatically pull in the correct QSL version.
